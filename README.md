@@ -5,7 +5,7 @@ using the AWS Translation service.
 
 The overall structure of the code was originally modified from what you get when you run:
 
-```
+```shell
 lein new protojure translator
 ```
 
@@ -24,7 +24,7 @@ and [Protojure protoc-plugin](https://github.com/protojure/protoc-plugin/release
 You can confirm these dependencies are installed by either using the `all` Makefile target
 or manually running
 
-```
+```shell
 protoc --clojure_out=grpc-client,grpc-server:src --proto_path=resources resources/sample.proto
 ```
 
@@ -34,7 +34,7 @@ Unary RPCs where the client sends a single request to the server and gets a sing
 ### Create proto messages and service
 Create a new proto file: `resources/translation.proto`.
 
-``` lein
+```clojure
 syntax = "proto3";
 package translator.proto.translation;
 
@@ -62,7 +62,7 @@ Implement the "Translation" service interface.  The compiler generates
 a defprotocol (translation/Service, in this case), and it is our job
 to define an implementation of every function within it.
 
-```
+```clojure
 ;; require the server ns
 (:require [translator.proto.translation.Translation.server :as translation]
           [protojure.grpc.status :as status])
@@ -86,7 +86,7 @@ to define an implementation of every function within it.
 
 Add translation routes to `grpc-routes`.
 
-```
+```clojure
 (proutes/->tablesyntax
             {:rpc-metadata translation/rpc-metadata
              :interceptors common-interceptors
@@ -95,13 +95,13 @@ Add translation routes to `grpc-routes`.
 
 ### Try the service using grpc-ui
 
-```
+```clojure
 grpcui -plaintext -proto ~/tmp/translation/resources/protos/translation.proto -import-path ~/tmp/translation/resources/protos localhost:8080
 ```
 
 ### Clojure client
 
-```
+```clojure
 ;; require client ns
 (:require [protojure.grpc.client.providers.http2 :as grpc.http2]
           [translator.proto.translation.Translation.client :as translation.client]
@@ -121,7 +121,7 @@ A server-streaming RPC is similar to a unary RPC, except that the server returns
 
 ### Add streaming rpc to the proto file
 
-``` lein
+```clojure
 message StreamingTranslationsRequest {
     string text = 1;
 }
@@ -137,7 +137,7 @@ run `gmake all`.
 
 In the service namespace do the following:
 
-```
+```clojure
 ;; require core.async ns
 (:require [clojure.core.async :as async])
 
@@ -156,7 +156,7 @@ In the service namespace do the following:
 
 ### Clojure Client
 
-```
+```clojure
 ;; require core.async
 (:require [clojure.core.async :as async])
 
