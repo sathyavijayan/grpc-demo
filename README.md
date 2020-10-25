@@ -65,7 +65,8 @@ to define an implementation of every function within it.
 ```clojure
 ;; require the server ns
 (:require [translator.proto.translation.Translation.server :as translation]
-          [protojure.grpc.status :as status])
+          [protojure.grpc.status :as status]
+          [translator.core :as core])
 
 ;; implement the service
 (deftype TranslationService []
@@ -145,9 +146,9 @@ In the service namespace do the following:
 (translations
     [this {{:keys [text] :as req} :grpc-params :as request}]
     (let [resp-chan (:grpc-out request)]
-      (async/go
+      (async/thread
         (doseq [lang core/supported-languages]
-          (async/>! resp-chan
+          (async/>!! resp-chan
             (core/translate {:text text :target-language (name lang)})))
         (async/close! resp-chan))
       {:status 200
@@ -178,6 +179,67 @@ In the service namespace do the following:
               out-chan))
 ```
 
+## bidi - Streaming
+
+### Add streaming rpc to the proto file
+
+``` protocol-buffer
+service Translation {
+    rpc translate_stream(stream TranslationRequest) returns (stream TranslationResponse);
+}
+```
+
+run `gmake all`
+
+### Implement the service
+
+In service namespace do the following:
+
+``` clojure
+(translate_stream
+    [this {req-chan :grpc-params :as request}]
+    (let [resp-chan (:grpc-out request)]
+      (async/thread
+        (loop [timeout-chan (async/timeout 10000)]
+          (let [[v c] (async/alts!! [timeout-chan req-chan])]
+            (if (or (= c timeout-chan) (nil? v))
+              (log/info "exiting - timed out")
+              (do
+                (async/>!! resp-chan (core/translate v))
+                (recur (async/timeout 10000))))))
+        (async/close! resp-chan))
+      {:status 200
+       :body resp-chan}))
+```
+
+
+### Clojure client
+
+``` clojure
+  ;; input and output channels
+  (def in-chan (async/chan 1))
+  (def out-chan (async/chan 1))
+
+  ;; go loop to print responses
+  (async/go-loop []
+    (if-let [resp (async/<! out-chan)]
+      (do
+        (println "Got resp:" resp)
+        (recur))
+      (println "Exiting go-loop")))
+
+  ;; make the call
+  (let [client @(grpc.http2/connect {:uri "http://localhost:8080" :idle-timeout -1})]
+    (translation.client/translate_stream
+      client
+      in-chan
+      out-chan))
+
+  ;; send requests
+  (async/go
+    (async/>! in-chan {:text "Hello" :target-language "ta"}))
+
+```
 
 ## License
 This project is licensed under the Apache License 2.0.
