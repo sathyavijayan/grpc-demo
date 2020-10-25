@@ -1,4 +1,4 @@
-(defproject translation "0.0.1-SNAPSHOT"
+(defproject translator "0.0.1-SNAPSHOT"
 
   :description "Service to translate text using AWS Translations intented to demo GRPC + Protojure."
 
@@ -47,6 +47,6 @@
   :resource-paths ["config", "resources"]
 
   :profiles {:dev {:dependencies [[io.pedestal/pedestal.service-tools "0.5.7"]]}
-             :uberjar {:aot [translation.server]}}
+             :uberjar {:aot [translator.main]}}
 
   :main translation.main)

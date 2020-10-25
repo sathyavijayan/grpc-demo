@@ -5,7 +5,6 @@
             [ring.util.response :as ring-resp]
             [protojure.pedestal.core :as protojure.pedestal]
             [protojure.pedestal.routes :as proutes]
-
             [clojure.java.io :as io]))
 
 (defn about-page

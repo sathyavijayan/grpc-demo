@@ -1,8 +1,8 @@
-(ns translation.main
+(ns translator.main
   (:gen-class)
   (:require [io.pedestal.http :as server]
             [io.pedestal.http.route :as route]
-            [translation.service :as service]
+            [translator.service :as service]
             [taoensso.timbre :as log]
             [taoensso.timbre.appenders.core :as appenders]
             [clojure.tools.namespace.repl :as tn]
@@ -35,6 +35,7 @@
 
 
   (go)
+
 
   ;; -- REPL
   )

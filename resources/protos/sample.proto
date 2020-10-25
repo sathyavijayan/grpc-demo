@@ -1,5 +1,5 @@
 syntax = "proto3";
-package translation.proto.sample;
+package translator.proto.sample;
 
 message Person {
     string name = 1;    
